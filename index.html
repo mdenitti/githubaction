@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoDevOps - Interactive CI/CD Simulator</title>
+  <meta name="description" content="Explore CI/CD pipeline automation interactively. Learn linting, testing, security scanning, and deployment stages by running real-time scenarios.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/index.css">
+</head>
+<body>
+  
+  <!-- Header Bar -->
+  <header class="app-header">
+    <div class="header-logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+      <h1>AutoDevOps <span class="badge">Simulator</span></h1>
+    </div>
+    
+    <div class="header-controls">
+      <!-- Scenario Selector -->
+      <div class="control-group" id="scenario-tour-target">
+        <label for="scenario-select">Pipeline Scenario</label>
+        <select id="scenario-select" class="styled-select">
+          <option value="happy">Happy Path (All Green Deploy)</option>
+          <option value="lint-fail">Syntax / Lint Check Failure</option>
+          <option value="test-fail">Unit Test Failure</option>
+          <option value="security-fail">SAST Security Vulnerability</option>
+          <option value="deploy-fail">Smoke Test Fail & Rollback</option>
+        </select>
+      </div>
+      
+      <!-- Speed Slider -->
+      <div class="control-group" id="speed-tour-target">
+        <label for="speed-slider">Speed: <span id="speed-val">1x</span></label>
+        <input type="range" id="speed-slider" min="0.5" max="3" step="0.5" value="1" class="styled-slider">
+      </div>
+
+      <!-- Action Buttons -->
+      <button id="btn-trigger" class="btn btn-primary pulse-effect">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+        Commit & Push
+      </button>
+      
+      <button id="btn-tour" class="btn btn-secondary">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        Guide
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="app-container">
+    
+    <!-- Left Column: Code Workspace -->
+    <section class="panel panel-code" id="editor-tour-target">
+      <div class="panel-header">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="code">
+            <span class="file-icon js">JS</span> app-config.js
+          </button>
+          <button class="tab-btn" data-tab="workflow">
+            <span class="file-icon yml">YML</span> pipeline.yml
+          </button>
+        </div>
+        <div class="indicator-saved">Autosaved</div>
+      </div>
+      
+      <div class="panel-body">
+        <!-- Tab Content 1: app-config.js -->
+        <div class="tab-content active" id="tab-code">
+          <div class="editor-wrapper">
+            <div class="line-numbers">
+              <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span>
+            </div>
+            <textarea id="code-editor" spellcheck="false">// Cyberpunk Gadget Store config
+export const storeConfig = {
+  name: "NEON MATRIX",
+  theme: "cyan", // options: cyan, pink, amber, emerald
+  discountPercent: 20, // Must be between 0 and 100
+  enableQuantumCheckout: true,
+  welcomeMessage: "Welcome to the future of retail."
+};</textarea>
+          </div>
+          <div class="editor-info">
+            <p>💡 <strong>Interactive Play:</strong> Modify properties in the code, select "Happy Path" and click <strong>Commit & Push</strong> to deploy changes live! Or make <code>discountPercent</code> exceed 100 or write invalid code to trigger pipeline failures.</p>
+          </div>
+        </div>
+        
+        <!-- Tab Content 2: pipeline.yml -->
+        <div class="tab-content" id="tab-workflow">
+          <div class="editor-wrapper">
+            <div class="line-numbers">
+              <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span>
+            </div>
+            <textarea id="workflow-editor" readonly spellcheck="false">name: CI_CD_Pipeline
+on: [push]
+
+jobs:
+  build:
+    steps:
+      - name: Checkout Code
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint Code
+        run: npm run lint
+
+  test:
+    needs: build
+    steps:
+      - name: Run Unit Tests
+        run: npm test
+
+  security:
+    needs: test
+    steps:
+      - name: Vulnerability Check
+        run: npm run audit
+
+  deploy:
+    needs: security
+    steps:
+      - name: Deploy to Cloud
+        run: npm run deploy</textarea>
+          </div>
+          <div class="editor-info">
+            <p>📋 This workflow config defines 4 stages: Build (Checkout, Install, Lint), Test (Unit Tests), Security (Audit Scanner), and Deploy. It runs automatically on every code push.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Center Column: Interactive Pipeline flow -->
+    <section class="panel panel-pipeline" id="pipeline-tour-target">
+      <div class="panel-header">
+        <h2>Interactive Pipeline</h2>
+        <div class="pipeline-status-badge idle" id="pipeline-status">Idle</div>
+      </div>
+      
+      <div class="panel-body pipeline-canvas-container">
+        
+        <!-- SVG Connections Layer -->
+        <svg class="pipeline-connections" viewBox="0 0 500 500" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="line-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#38bdf8" />
+              <stop offset="50%" stop-color="#8b5cf6" />
+              <stop offset="100%" stop-color="#2ea44f" />
+            </linearGradient>
+          </defs>
+          <path id="path-1" class="conn-path" d="M 60,110 L 250,110" />
+          <path id="path-2" class="conn-path" d="M 250,110 L 440,110" />
+          <path id="path-3" class="conn-path" d="M 440,110 L 440,250" />
+          <path id="path-4" class="conn-path" d="M 440,250 L 250,250" />
+          <path id="path-5" class="conn-path" d="M 250,250 L 60,250" />
+          <path id="path-6" class="conn-path" d="M 60,250 L 60,390" />
+          <path id="path-7" class="conn-path" d="M 60,390 L 250,390" />
+          <path id="path-8" class="conn-path" d="M 250,390 L 440,390" />
+        </svg>
+
+        <!-- Pipeline Nodes -->
+        <div class="pipeline-grid">
+          <!-- Node 1: Code Push (Source) -->
+          <div class="node-card position-source active-state" id="node-source" data-stage="source">
+            <div class="node-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none">
+                <circle cx="12" cy="18" r="3"></circle>
+                <circle cx="6" cy="6" r="3"></circle>
+                <circle cx="18" cy="6" r="3"></circle>
+                <path d="M18 9v3a4 4 0 0 1-4 4h-4"></path>
+                <path d="M6 9v3a4 4 0 0 0 4 4"></path>
+              </svg>
+            </div>
+            <div class="node-details">
+              <h3>1. Source Push</h3>
+              <span class="node-status">Idle</span>
+            </div>
+          </div>
+
+          <!-- Node 2: Resolve Dependencies -->
+          <div class="node-card position-install" id="node-install" data-stage="install">
+            <div class="node-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+            </div>
+            <div class="node-details">
+              <h3>2. Install Dep</h3>
+              <span class="node-status">Pending</span>
+            </div>
+          </div>
+
+          <!-- Node 3: Lint & Build -->
+          <div class="node-card position-lint" id="node-lint" data-stage="lint">
+            <div class="node-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+              </svg>
+            </div>
+            <div class="node-details">
+              <h3>3. Code Lint</h3>
+              <span class="node-status">Pending</span>
+            </div>
+          </div>
+
+          <!-- Node 4: Unit Test -->
+          <div class="node-card position-test" id="node-test" data-stage="test">
+            <div class="node-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+            <div class="node-details">
+              <h3>4. Unit Tests</h3>
+              <span class="node-status">Pending</span>
+            </div>
+          </div>
+
+          <!-- Node 5: Integration Test -->
+          <div class="node-card position-integration" id="node-integration" data-stage="integration">
+            <div class="node-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+              </svg>
+            </div>
+            <div class="node-details">
+              <h3>5. E2E Tests</h3>
+              <span class="node-status">Pending</span>
+            </div>
+          </div>
+
+          <!-- Node 6: Security Scan -->
+          <div class="node-card position-security" id="node-security" data-stage="security">
+            <div class="node-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+            <div class="node-details">
+              <h3>6. Security (SAST)</h3>
+              <span class="node-status">Pending</span>
+            </div>
+          </div>
+
+          <!-- Node 7: Staging Deploy -->
+          <div class="node-card position-staging" id="node-staging" data-stage="staging">
+            <div class="node-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="16"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+              </svg>
+            </div>
+            <div class="node-details">
+              <h3>7. Staging Deploy</h3>
+              <span class="node-status">Pending</span>
+            </div>
+          </div>
+
+          <!-- Node 8: Smoke Tests -->
+          <div class="node-card position-smoke" id="node-smoke" data-stage="smoke">
+            <div class="node-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+            </div>
+            <div class="node-details">
+              <h3>8. Smoke Tests</h3>
+              <span class="node-status">Pending</span>
+            </div>
+          </div>
+
+          <!-- Node 9: Prod Deployment -->
+          <div class="node-card position-prod" id="node-deploy" data-stage="deploy">
+            <div class="node-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+              </svg>
+            </div>
+            <div class="node-details">
+              <h3>9. Production</h3>
+              <span class="node-status">Pending</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Call to Action Indicator -->
+        <div class="pipeline-instruction">
+          <p>🖱️ Click on any stage node to learn what happens under the hood!</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Right Column: Console Terminal & Live App -->
+    <section class="panel panel-output" id="output-tour-target">
+      <div class="panel-header">
+        <h2>Live Logs & Production</h2>
+      </div>
+      
+      <div class="panel-body terminal-preview-split">
+        <!-- Live Bash Console -->
+        <div class="console-box">
+          <div class="console-header">
+            <div class="console-buttons">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <span class="console-title">bash - runner-agent-07.log</span>
+          </div>
+          <div class="console-body" id="console-logs">
+            <div class="log-line command">$ cicd-runner --listen</div>
+            <div class="log-line info">Waiting for push event... Ready.</div>
+          </div>
+        </div>
+
+        <!-- Virtual Phone Device Preview -->
+        <div class="device-box" id="device-tour-target">
+          <div class="device-notch"></div>
+          <div class="device-screen" id="device-screen">
+            <!-- App Header -->
+            <div class="device-app-bar theme-cyan" id="virtual-app-bar">
+              <span class="device-app-title" id="virtual-store-name">NEON MATRIX</span>
+              <div class="cart-icon">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+                  <circle cx="9" cy="21" r="1"></circle>
+                  <circle cx="20" cy="21" r="1"></circle>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+              </div>
+            </div>
+            
+            <!-- App Content -->
+            <div class="device-app-body">
+              <div class="banner theme-cyan-bg" id="virtual-discount-banner">
+                ⚡ FLASH SALE: <span id="virtual-discount-amount">20</span>% OFF ALL CYBERNETICS!
+              </div>
+              <div class="welcome-text" id="virtual-welcome">Welcome to the future of retail.</div>
+              
+              <!-- Demo Items Grid -->
+              <div class="gadget-items">
+                <div class="gadget-card">
+                  <div class="gadget-image placeholder-img-1">🤖</div>
+                  <div class="gadget-info">
+                    <h4>Neural Interface</h4>
+                    <span class="price">$1,200</span>
+                  </div>
+                </div>
+                <div class="gadget-card">
+                  <div class="gadget-image placeholder-img-2">🕶️</div>
+                  <div class="gadget-info">
+                    <h4>HUD Spectacles</h4>
+                    <span class="price">$450</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Quantum Checkout (Conditional Beta Feature) -->
+              <div class="beta-feature" id="virtual-quantum-checkout">
+                <div class="feature-tag">BETA</div>
+                <h5>⚛️ Quantum Tele-Checkout Enabled</h5>
+                <p>Instant shipping via quantum entanglement.</p>
+              </div>
+            </div>
+
+            <!-- Deployment status overlay on top of screen -->
+            <div class="device-overlay active" id="virtual-deploy-overlay">
+              <div class="overlay-loader">
+                <div class="spinner"></div>
+                <p id="overlay-msg">Production: Stable v1.0.0 (Green)</p>
+              </div>
+            </div>
+          </div>
+          <div class="device-home-bar"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Educational Info Popover Modal (tethered / standalone) -->
+  <div id="edu-popover" popover="manual" role="dialog" aria-labelledby="edu-title">
+    <button class="popover-close-btn" popovertarget="edu-popover" popovertargetaction="hide">×</button>
+    <div class="popover-body">
+      <div class="popover-badge" id="edu-badge">STAGE INFO</div>
+      <h2 id="edu-title">Stage Title</h2>
+      <p id="edu-desc">Stage description goes here.</p>
+      
+      <div class="popover-section">
+        <h3>🛠️ Common Tools</h3>
+        <div id="edu-tools" class="tools-tags">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <div class="popover-section" id="edu-why-section">
+        <h3>💡 Why it matters</h3>
+        <p id="edu-why">Rationale explanation.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Tour Popovers (Onboarding) -->
+  <div id="tour-step-1" popover="manual" role="dialog" class="tour-popover" aria-labelledby="tour-1-title">
+    <h3 id="tour-1-title">💻 The Code Workspace</h3>
+    <p>This is your code and workflow configuration. You can directly edit the <strong>app-config.js</strong> parameters here to see how your changes deploy!</p>
+    <div class="tour-nav">
+      <span>1/5</span>
+      <button class="btn-tour-next" data-next="tour-step-2">Next →</button>
+    </div>
+  </div>
+
+  <div id="tour-step-2" popover="manual" role="dialog" class="tour-popover" aria-labelledby="tour-2-title">
+    <h3 id="tour-2-title">⚙️ Select a Scenario</h3>
+    <p>Choose a pipeline scenario. You can run the happy path (all green) or trigger linting, testing, security, or deployment errors to see how CI/CD blocks and rolls back failures.</p>
+    <div class="tour-nav">
+      <button class="btn-tour-prev" data-prev="tour-step-1">← Back</button>
+      <span>2/5</span>
+      <button class="btn-tour-next" data-next="tour-step-3">Next →</button>
+    </div>
+  </div>
+
+  <div id="tour-step-3" popover="manual" role="dialog" class="tour-popover" aria-labelledby="tour-3-title">
+    <h3 id="tour-3-title">⛓️ The Pipeline flow</h3>
+    <p>This panel shows the stages of your CI/CD pipeline. Watch the glowing path and status icons light up as each stage executes in real-time!</p>
+    <div class="tour-nav">
+      <button class="btn-tour-prev" data-prev="tour-step-2">← Back</button>
+      <span>3/5</span>
+      <button class="btn-tour-next" data-next="tour-step-4">Next →</button>
+    </div>
+  </div>
+
+  <div id="tour-step-4" popover="manual" role="dialog" class="tour-popover" aria-labelledby="tour-4-title">
+    <h3 id="tour-4-title">📟 Live Terminal Logs</h3>
+    <p>See real-time shell output from the pipeline runner! Read logs as npm commands run, tests compile, and linters scan. Great for debugging!</p>
+    <div class="tour-nav">
+      <button class="btn-tour-prev" data-prev="tour-step-3">← Back</button>
+      <span>4/5</span>
+      <button class="btn-tour-next" data-next="tour-step-5">Next →</button>
+    </div>
+  </div>
+
+  <div id="tour-step-5" popover="manual" role="dialog" class="tour-popover" aria-labelledby="tour-5-title">
+    <h3 id="tour-5-title">📱 Live Production Device</h3>
+    <p>This virtual preview displays your production application. If the pipeline completes successfully, the app updates instantly. If it fails, your live app stays online on the last stable version without downtime!</p>
+    <div class="tour-nav">
+      <button class="btn-tour-prev" data-prev="tour-step-4">← Back</button>
+      <span>5/5</span>
+      <button class="btn-tour-close">Finish Tour</button>
+    </div>
+  </div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
