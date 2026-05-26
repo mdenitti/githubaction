@@ -1,5 +1,5 @@
 /* ==========================================
-   CI/CD Simulator - Application Logic & State
+   CI/CD Simulator SyntraPXL - Application Logic & State
    ========================================== */
 
 import { confetti } from './confetti.js';
