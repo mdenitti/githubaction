@@ -1,50 +1,51 @@
-name: Deploy to Production
+name: Deploy Application
+
 on:
   push:
     branches:
       - main
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.4'
-          extensions: mbstring, bcmath
 
-      - name: Setup Node.js
+jobs:
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
+          cache: 'npm'
 
-      - name: Install NPM dependencies and build assets
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Application
+        run: npm run build
+
+      - name: Configure SSH and Deploy
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         run: |
-          npm install
-          npm run build
-          
-      - name: Setup deploy key
-        run: |
+          # Set up SSH directory and key
           mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_rsa
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan ssh.hellocode.be >> ~/.ssh/known_hosts
           
-      - name: Deploy to server
-        run: |
-          # Use rsync with relative path (from home directory)
-          rsync -avz --exclude '.git/' \
-                     --exclude '.github/' \
-                     --exclude 'node_modules/' \
-                     --exclude '.env' \
-                     --exclude '.env.example' \
-                     ./ hellocodebe@ssh.hellocode.be:subsites/fullstack.be/
+          # Add remote host to known_hosts to bypass connection prompt
+          ssh-keyscan -H ssh.hellocode.be >> ~/.ssh/known_hosts
           
-      - name: Post-deployment commands
-        run: |
-          ssh hellocodebe@ssh.hellocode.be "cd subsites/fullstack.be && bash post-deploy.sh"
+          # Deploy files using rsync
+          rsync -avz -e "ssh -i ~/.ssh/id_rsa" \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'node_modules/' \
+            --exclude '.env' \
+            --exclude '.env.example' \
+            ./ hellocodebe@ssh.hellocode.be:subsites/fullstack.be/
+            
+          # Run post-deployment script on the server
+          ssh -i ~/.ssh/id_rsa hellocodebe@ssh.hellocode.be "bash subsites/fullstack.be/postdeploy.sh"
