@@ -413,7 +413,7 @@ function resetPipelineNodes() {
   // Reset paths
   for (let i = 1; i <= 8; i++) {
     const path = document.getElementById(`path-${i}`);
-    if (path) path.className = "conn-path";
+    if (path) path.setAttribute("class", "conn-path");
   }
 }
 
@@ -434,7 +434,7 @@ function setNodeStatus(stage, status) {
 function setPathStatus(index, status) {
   const path = document.getElementById(`path-${index}`);
   if (path) {
-    path.className = `conn-path ${status}`;
+    path.setAttribute("class", `conn-path ${status}`);
   }
 }
 
